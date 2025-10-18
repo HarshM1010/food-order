@@ -5,7 +5,7 @@ import Navbar from './components/Navbar';
 import Home from './components/Home';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
-
+import Signup from './components/Signup';
 const App = () => {
   return (
     <Router>
@@ -16,6 +16,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/menu/:vendorId" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/signup" element={<Signup />} />
           </Routes>
         </div>
       </AppProvider>
