@@ -1,49 +1,42 @@
 const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
-  customerName: {
+  user:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"user",
+    required:true
+  },
+  vendor:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Vendor",
+    required:true
+  },
+  orderMsg:{
     type: String,
-    required: true,
+    required:true,
   },
-  roomNumber: {
-    type: String,
-    required: true,
+  isRejected:{
+    type: Boolean,
+    default: false,
   },
-  phoneNumber: {
-    type: String,
-    required: true,
+  isCompleted:{
+    type: Boolean,
+    default: false,
   },
-  items: [{
-    menuItemId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'MenuItem',
-    },
-    name: String,
-    price: Number,
-    quantity: Number,
-    vendor: String,
-  }],
-  subtotal: {
-    type: Number,
-    required: true,
+  isCancelled:{
+    type: Boolean,
+    default: false,
   },
-  deliveryFee: {
-    type: Number,
-    default: 20,
-  },
-  totalAmount: {
-    type: Number,
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'],
-    default: 'pending',
+  review:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"Review",
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+},{
+  timestamps: true
 });
 
 module.exports = mongoose.model('Order', OrderSchema);

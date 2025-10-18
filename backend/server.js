@@ -1,35 +1,48 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
+require("dotenv").config();
+import { sendOtp, verifyOtp } from "./controllers/authController.js";
+require("./cronJobs/reviewCleanup");
 const app = express();
 
+const {dbConnect} = require("./config/db");
+const PORT = process.env.PORT || 4000;
+
+
+const cookieParser = require("cookie-parser");
+const cloudinary = require("./config/Cloudinary");
+
 // Middleware
-app.use(cors());
+app.use(cors({ 
+    origin: [
+        "http://localhost:3000",
+    ],
+    credentials:true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    optionsSuccessStatus: 200
+})); 
+
+
 app.use(express.json());
+app.use(cookieParser());
 
 // Routes
+app.post("/api/v1/send-otp", sendOtp);
+app.post("/api/v1/verify-otp", verifyOtp);
 app.use('/api/vendors', require('./routes/vendors'));
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/orders', require('./routes/orders'));
-
+app.use("/api/auth", require("./routes/auth"));
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB Connected Successfully'))
-.catch((err) => console.log('MongoDB Connection Error:', err));
+dbConnect();
+cloudinary.cloudinaryConnect();
+
 
 // Basic route
-app.get('/', (req, res) => {
-  res.send('Campus Cravings API is running');
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.get("/",(req,res) => {
+    res.send(`<h1>This is Home page....</h1>`);
+})
+app.listen(PORT,() => {
+    console.log(`Server started successfully at port ${PORT}`);
+})

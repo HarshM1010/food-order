@@ -1,26 +1,39 @@
 const mongoose = require('mongoose');
 
 const VendorSchema = new mongoose.Schema({
-  name: {
+  user:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"user",
+    required:true
+  },
+  shopName:{
     type: String,
     required: true,
   },
+  address:{
+    type: String,
+  },
   description: {
     type: String,
-    required: true,
+  },
+  vendorPic:{
+    type: String,
+    required:true,
   },
   timing: {
     type: String,
     required: true,
   },
-  image: {
-    type: String,
-    default: '🍛',
-  },
-  isActive: {
+  isServing:{
     type: Boolean,
     default: true,
   },
+  orders:[
+    {
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Order",
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
