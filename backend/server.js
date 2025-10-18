@@ -1,16 +1,25 @@
 const express = require('express');
+const mongoose = require("mongoose");
 const cors = require('cors');
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
-import { sendOtp, verifyOtp } from "./controllers/authController.js";
-require("./cronJobs/reviewCleanup");
+const twilio = require("twilio");
+require("./utils/scheduleDelete.js");
+
 const app = express();
+
+global.client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+const authRoutes = require("./routes/auth");
+
 
 const {dbConnect} = require("./config/db");
 const PORT = process.env.PORT || 4000;
 
 
-const cookieParser = require("cookie-parser");
+
 const cloudinary = require("./config/Cloudinary");
+const { auth } = require('./MiddleWare/auth.js');
 
 // Middleware
 app.use(cors({ 
@@ -28,12 +37,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
-app.post("/api/v1/send-otp", sendOtp);
-app.post("/api/v1/verify-otp", verifyOtp);
+
 app.use('/api/vendors', require('./routes/vendors'));
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/orders', require('./routes/orders'));
-app.use("/api/auth", require("./routes/auth"));
+app.use("/api/v1/auth",authRoutes);
 // MongoDB Connection
 dbConnect();
 cloudinary.cloudinaryConnect();
