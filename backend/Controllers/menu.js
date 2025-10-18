@@ -74,7 +74,7 @@ exports.createMenu = async (req, res) => {
     }
 }
 
-exports.adeMenu = async (req, res) => {
+exports.addMenu = async (req, res) => {
     try{
         const vendorId = req.params?.id;
         const menuPic = req.files?.menuPic;

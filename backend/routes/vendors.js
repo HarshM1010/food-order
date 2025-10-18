@@ -1,45 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const Vendor = require('../models/Vendor');
 
-// Get all vendors
-router.get('/', async (req, res) => {
-  try {
-    const vendors = await Vendor.find({ isActive: true });
-    res.json(vendors);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+const { createVendor, updateVendor, deleteVendor } = require('../Controllers/Vendor');
+const { auth, isVendor } = require("../MiddleWare/auth");
+const { createNotice } = require('../Controllers/Notice');
 
-// Get single vendor
-router.get('/:id', async (req, res) => {
-  try {
-    const vendor = await Vendor.findById(req.params.id);
-    if (!vendor) {
-      return res.status(404).json({ message: 'Vendor not found' });
-    }
-    res.json(vendor);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// Create vendor (for admin)
-router.post('/', async (req, res) => {
-  const vendor = new Vendor({
-    name: req.body.name,
-    description: req.body.description,
-    timing: req.body.timing,
-    image: req.body.image,
-  });
-
-  try {
-    const newVendor = await vendor.save();
-    res.status(201).json(newVendor);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
+router.post("/create-vendor", auth, isVendor, createVendor);
+router.post("/update-vendor/:vendorId", auth, isVendor, updateVendor);
+router.delete("/delete-vendor/:vendorId", auth, isVendor, deleteVendor);
+router.post("/create-notice", auth, isVendor, createNotice);
 
 module.exports = router;
