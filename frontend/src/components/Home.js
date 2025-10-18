@@ -1,84 +1,157 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Clock, ChevronRight, AlertCircle } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { 
+  Clock, 
+  ChevronRight, 
+  Search, 
+  AlertCircle, 
+  ShoppingBag, 
+  Sparkles // Added for "Popular" section
+} from 'lucide-react';
+import { useApp } from './AppProvider';
 
 const Home = () => {
-  const { vendors, loading, error, searchQuery, setSearchQuery } = useApp();
+  const { vendors, loading, error, searchQuery, setSearchQuery, resetRequest } = useApp();
   const navigate = useNavigate();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const handleVendorClick = (vendor) => {
+    resetRequest();
+    navigate(`/menu/${vendor._id}`, { state: { vendor } });
+  }
 
   const filteredVendors = vendors.filter(vendor =>
     vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     vendor.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Take the first 4 vendors to feature as "Popular Picks"
+  const popularVendors = vendors.slice(0, 4);
+
   return (
-    <main className="max-w-6xl mx-auto px-4 py-6">
-      {error && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-yellow-800 font-medium">Using demo data</p>
-            <p className="text-yellow-700 text-sm">
-              Backend API not connected. Start your backend server to see live data.
-            </p>
-          </div>
+    <main className={`bg-gradient-to-br from-slate-50 to-gray-100 min-h-screen transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        
+        {/* Header Section */}
+        <div className={`text-center mb-10 transition-all duration-700 transform ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0'}`}>
+            <h1 className="text-6xl md:text-7xl font-extrabold text-slate-800 tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-slate-700 to-slate-900">
+              UniServe
+            </h1>
+            <p className="mt-4 text-lg text-slate-500 italic">"Good food, fast. The fuel for your brilliant ideas."</p>
         </div>
-      )}
 
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+        {/* Search Bar */}
+        <div className={`relative mb-12 transition-all duration-700 delay-200 ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'}`}>
+          <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-slate-400 w-6 h-6 z-10" />
+          <input
+            type="text"
+            placeholder="Search for restaurants, cuisines, or anything..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-14 pr-6 py-5 rounded-2xl border-2 border-transparent bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 focus:outline-none transition-all duration-300 shadow-lg"
+          />
         </div>
-      ) : (
-        <div className="space-y-6 animate-fadeIn">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search for restaurants or food items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-orange-500 focus:outline-none transition-all shadow-sm"
-            />
-          </div>
 
-          {/* Vendors Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredVendors.map((vendor) => (
-              <div
-                key={vendor._id}
-                onClick={() => navigate(`/menu/${vendor._id}`, { state: { vendor } })}
-                className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-2 border-transparent hover:border-orange-300"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-4xl">{vendor.image}</span>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-800">{vendor.name}</h3>
-                        <p className="text-gray-600 text-sm">{vendor.description}</p>
-                      </div>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 mb-6 rounded-lg flex items-start gap-3 shadow-md">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Could not connect to server</p>
+              <p className="text-sm">Displaying demo data. Functionality may be limited.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Spinner */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-amber-500"></div>
+          </div>
+        )}
+
+        {/* ----- NEW: Popular Picks Section ----- */}
+        {!loading && popularVendors.length > 0 && (
+          <div className={`mb-12 opacity-0 animate-fade-in-up`} style={{ animationDelay: `300ms` }}>
+            <div className="flex items-center mb-5">
+              <Sparkles className="w-6 h-6 text-amber-500 mr-2" />
+              <h2 className="text-2xl font-bold text-slate-700">Popular Picks</h2>
+            </div>
+            <div className="flex gap-5 overflow-x-auto pb-4 -mb-4">
+              {popularVendors.map((vendor) => (
+                <div
+                  key={vendor._id}
+                  onClick={() => handleVendorClick(vendor)}
+                  className="flex-shrink-0 w-64 bg-white rounded-3xl p-5 shadow-lg border-2 border-transparent hover:border-amber-400 transition-all duration-300 cursor-pointer group transform hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-4xl flex-shrink-0 shadow-inner">
+                      {vendor.image}
                     </div>
-                    <div className="flex items-center gap-2 text-gray-500 text-sm mt-3">
-                      <Clock className="w-4 h-4" />
-                      <span>{vendor.timing}</span>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800 truncate">{vendor.name}</h3>
+                      <p className="text-sm text-slate-500 truncate">{vendor.description}</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-6 h-6 text-orange-500" />
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredVendors.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No vendors found matching your search</p>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+
+        {/* ----- All Restaurants Section ----- */}
+        {!loading && (
+          <div className={`opacity-0 animate-fade-in-up`} style={{ animationDelay: `4G00ms` }}>
+            <h2 className="text-2xl font-bold text-slate-700 mb-6">
+              Currently Serving Restaurants
+            </h2>
+            
+            {filteredVendors.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {filteredVendors.map((vendor, index) => (
+                  <div
+                    key={vendor._id}
+                    onClick={() => handleVendorClick(vendor)}
+                    className={`bg-white rounded-3xl p-6 shadow-lg border-2 border-transparent hover:border-amber-400 transition-all duration-300 cursor-pointer group transform hover:-translate-y-2 hover:shadow-2xl`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 flex items-center gap-5">
+                        {/* --- IMPROVED CARD --- */}
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center text-5xl flex-shrink-0 shadow-inner transition-transform duration-300 group-hover:scale-110">
+                          {vendor.image}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold text-slate-800">{vendor.name}</h3>
+                          <p className="text-slate-600 mb-3">{vendor.description}</p>
+                          <div className="flex items-center gap-2 text-slate-500 text-sm">
+                            <Clock className="w-4 h-4" />
+                            <span>{vendor.timing}</span>
+                          </div>
+                        </div>
+                        {/* --- END IMPROVED CARD --- */}
+                      </div>
+                      <ChevronRight className="w-8 h-8 text-slate-300 self-center transition-all duration-300 group-hover:text-amber-500 group-hover:translate-x-1 flex-shrink-0" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // "No Vendors Found" State
+              <div className="text-center py-24">
+                <ShoppingBag className="w-20 h-20 mx-auto text-slate-300 mb-5" />
+                {/* --- THIS LINE IS NOW FIXED --- */}
+                <p className="text-slate-600 text-2xl font-semibold">No vendors found</p>
+                <p className="text-slate-400 mt-2">Maybe try a different search? Your next favorite meal is out there!</p>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
     </main>
   );
 };

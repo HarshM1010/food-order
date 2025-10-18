@@ -5,7 +5,7 @@ const { createOrder, editOrder, isCompleted, isRejected, isCancelled, completeAl
 const {auth,isStudent, isVendor} = require("../MiddleWare/auth");
 const {createReview} = require("../Controllers/ReviewOrder");
 
-router.post("/create-order/:vendorId",auth,isStudent,createOrder);
+router.post("/create-order/:vendorId" ,createOrder);
 router.post("/edit-order/:orderId",auth,isStudent,editOrder);
 router.post("/complete-order/:orderId",auth,isVendor,isCompleted);
 router.post("/reject-order/:orderId",auth,isVendor,isRejected);

@@ -18,7 +18,6 @@ const VendorSchema = new mongoose.Schema({
   },
   vendorPic:{
     type: String,
-    required:true,
   },
   timing: {
     type: String,

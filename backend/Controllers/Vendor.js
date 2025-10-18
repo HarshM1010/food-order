@@ -9,49 +9,52 @@ function isFileTypeSupported(fileType,supportedTypes) {
 }
 exports.createVendor = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { shopName, address, description, timing } = req.body;
-    const vendorPic = req.files?.vendorPic;
-
-    if (!shopName || !address || !description || !vendorPic || !timing) {
+    // const userId = req.user.id;  
+    // const userId = req.params?.userId;
+    const {userId , shopName, address, description, timing } = req.body;
+    // const vendorPic = req.files?.vendorPic;
+    if (!userId) {
+    return res.status(400).json({ msg: "User ID is required for shop creation." });
+}
+    if (!shopName || !address || !description  || !timing) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields (shopName, vendorPic, timing).",
       });
     }
     //uploading the vendorPic to cloudinary
-    const supportedFileTypes = ["jpeg","jpg","png"];
-    const vendorPicType = vendorPic.name.split(".").pop().toLowerCase();
-    if(!isFileTypeSupported(vendorPicType,supportedFileTypes)) {
-        return res.status(400).json({
-            success:false,
-            message:"File format not supported."
-        })
-    }
-    if(vendorPic.size > MAX_SIZE) {
-        return res.status(400).json({
-            success:false,
-            message:"File size too large."
-        })
-    }
-    const filesDir = __dirname + "/files/";
-    if (!fs.existsSync(filesDir)) {
-        fs.mkdirSync(filesDir);
-    }
-    const tempFilePath = __dirname + "/files/" + Date.now() + `.${vendorPic.name.split(".").pop().toLowerCase()}`;
-    await new Promise((resolve, reject) => {
-        vendorPic.mv(tempFilePath, (err) => {
-            if (err) {
-                console.error("Error while saving file locally:", err); 
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-    const response = await uploadToCloudinary(tempFilePath,process.env.FOLDER_NAME);
-    const image_url = response.secure_url;
-    fs.unlinkSync(tempFilePath);
+    // const supportedFileTypes = ["jpeg","jpg","png"];
+    // const vendorPicType = vendorPic.name.split(".").pop().toLowerCase();
+    // if(!isFileTypeSupported(vendorPicType,supportedFileTypes)) {
+    //     return res.status(400).json({
+    //         success:false,
+    //         message:"File format not supported."
+    //     })
+    // }
+    // if(vendorPic.size > MAX_SIZE) {
+    //     return res.status(400).json({
+    //         success:false,
+    //         message:"File size too large."
+    //     })
+    // }
+    // const filesDir = __dirname + "/files/";
+    // if (!fs.existsSync(filesDir)) {
+    //     fs.mkdirSync(filesDir);
+    // }
+    // const tempFilePath = __dirname + "/files/" + Date.now() + `.${vendorPic.name.split(".").pop().toLowerCase()}`;
+    // await new Promise((resolve, reject) => {
+    //     vendorPic.mv(tempFilePath, (err) => {
+    //         if (err) {
+    //             console.error("Error while saving file locally:", err); 
+    //             reject(err);
+    //         } else {
+    //             resolve();
+    //         }
+    //     });
+    // });
+    // const response = await uploadToCloudinary(tempFilePath,process.env.FOLDER_NAME);
+    // const image_url = response.secure_url;
+    // fs.unlinkSync(tempFilePath);
 
     // Assuming the user is authenticated and ID is stored in req.user.id
     const vendor = await Vendor.create({
@@ -59,7 +62,7 @@ exports.createVendor = async (req, res) => {
       shopName,
       address,
       description,
-      vendorPic:image_url,
+    //   vendorPic:image_url,
       timing,
     });
 
@@ -231,6 +234,23 @@ exports.openClose = async(req,res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to update serving status.",
+            error: err.message,
+        });
+    }
+}
+
+exports.getAllVendors = async(req,res) => {
+    try{
+        const vendors =  await Vendor.find({});
+        return res.status(200).json({
+            success:true,
+            vendors,
+        });
+    }catch(err) {
+        console.error(err);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch orders.",
             error: err.message,
         });
     }

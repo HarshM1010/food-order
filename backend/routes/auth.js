@@ -7,7 +7,7 @@ const serviceSid = process.env.TWILIO_SERVICE_SID;
 require("dotenv").config();
 const router = express.Router();
 
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 // ✅ Send OTP
 router.post("/send-otp", async (req, res) => {
   try {
@@ -15,9 +15,11 @@ router.post("/send-otp", async (req, res) => {
 
     if (!phoneNum) return res.status(400).json({ msg: "Phone number is required" });
 
+    // const formattedNumber = phoneNum.startsWith('+') ? phoneNum : `+${phoneNum}`;
+
     const verification = await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SID)
-      .verifications.create({ to: phoneNum, channel: "sms" });
+      .verifications.create({ to: phoneNum , channel: "sms" });
 
     return res.status(200).json({ msg: "OTP sent successfully", status: verification.status });
   } catch (err) {
@@ -29,12 +31,12 @@ router.post("/send-otp", async (req, res) => {
 // ✅ Verify OTP and Signup
 router.post("/signup", async (req, res) => {
   try {
-    const { fname, lname, accountType="Student", phoneNum, email, password, otp } = req.body;
+    const { fname, lname, accountType="Student", phoneNum, email, password } = req.body;
     if(!fname || !accountType || !phoneNum || !password) {
         return res.status(400).json({ msg: "Please provide valid info." });
     }
-    if (!otp || !phoneNum)
-      return res.status(400).json({ msg: "Phone number and OTP are required" });
+    // if (!otp || !phoneNum)
+    //   return res.status(400).json({ msg: "Phone number and OTP are required" });
 
     // Check if user already exists
     let existingUser = await User.findOne({ phoneNum });
@@ -42,12 +44,12 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ msg: "User already exists. Please log in." });
 
     // Verify OTP with Twilio
-    const verificationCheck = await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SID)
-      .verificationChecks.create({ to: phoneNum, code: otp });
+    // const verificationCheck = await client.verify.v2
+    //   .services(process.env.TWILIO_VERIFY_SID)
+    //   .verificationChecks.create({ to: phoneNum, code: otp });
 
-    if (verificationCheck.status !== "approved")
-      return res.status(400).json({ msg: "Invalid or expired OTP" });
+    // if (verificationCheck.status !== "approved")
+    //   return res.status(400).json({ msg: "Invalid or expired OTP" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -63,29 +65,30 @@ router.post("/signup", async (req, res) => {
     });
 
     // Generate JWT token
-    const payload = {
-        email:newUser.email,
-        id:newUser._id,
-        accountType:newUser.accountType
-    }
-    //change the expiry time of token...
-    const token = jwt.sign(payload,process.env.JWT_SECRET,{ expiresIn:"9h",issuer:"Uniserve" });
-    const userObj = newUser.toObject();
-    userObj.token = token;
-    userObj.password = undefined;
-    const options = {
-        expires: new Date(Date.now() + 3*24*60*60*1000), //expires in 3 days...
-        httpOnly:true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS in production
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Allow cross-domain
-    };
-    console.log(token);
-    res.cookie("token",token,options).status(200).json({
-        success:true,
-        token,
-        userObj,
-        message:"user logged in successfully."
-    })
+    // const payload = {
+    //     email:newUser.email,
+    //     id:newUser._id,
+    //     accountType:newUser.accountType
+    // }
+    // //change the expiry time of token...
+    // const token = jwt.sign(payload,process.env.JWT_SECRET,{ expiresIn:"9h",issuer:"Uniserve" });
+    // const userObj = newUser.toObject();
+    // userObj.token = token;
+    // userObj.password = undefined;
+    // const options = {
+    //     expires: new Date(Date.now() + 3*24*60*60*1000), //expires in 3 days...
+    //     httpOnly:true,
+    //     secure: process.env.NODE_ENV === 'production', // HTTPS in production
+    //     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Allow cross-domain
+    // };
+    // console.log(token);
+    // res.cookie("token",token,options).status(200).json({
+    //     success:true,
+    //     token,
+    //     userObj,
+    //     message:"user logged in successfully."
+    // })\
+    res.status(201).json({ msg: "User registered successfully", user: newUser });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "OTP verification failed,Can't Signin", error: err.message });
